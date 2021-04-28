@@ -27,12 +27,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.CompOpModes;
+package org.firstinspires.ftc.teamcode.UltGoalCompOpModes;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -50,9 +49,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Foundation Blue Building", group="Linear Opmode")
+@TeleOp(name="UltGoal Comp Robot", group="Linear Opmode")
 //@Disabled
-public class FoundationBlueBuilding extends LinearOpMode {
+public class UGCompRobot extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -62,56 +61,26 @@ public class FoundationBlueBuilding extends LinearOpMode {
     private DcMotor rightBack = null;
     private Servo foundGrabber = null;
 
+    // declare motor speed variables
+    double RF; double LF; double RR; double LR;
+    // declare joystick position variables
+    double X1; double Y1; double X2; double Y2;
+    // operational constants
+    double joyScale = 0.2;
+    double motorMax = 0.6; // Limit motor power to this value for Andymark RUN_USING_ENCODER mode
+
+    double foundEncoder = 0.2;
+
+    ElapsedTime timerFound = new ElapsedTime();
+
+    ElapsedTime timeDriveZero = new ElapsedTime();
+
     public void wait(double secs) {
         ElapsedTime t = new ElapsedTime();
         t.reset();
         while (t.seconds() < secs && opModeIsActive()){}
     }
 
-    public void straight(double power, double secs) {
-        ElapsedTime t = new ElapsedTime();
-        t.reset();
-        while (t.seconds() < secs && opModeIsActive()){
-            leftFront.setPower(power);
-            leftBack.setPower(power);
-            rightFront.setPower(power);
-            rightBack.setPower(power);
-        }
-        leftFront.setPower(0);
-        leftBack.setPower(0);
-        rightFront.setPower(0);
-        rightBack.setPower(0);
-    }
-
-    public void turn(double powerLeft, double powerRight, double secs) {
-        ElapsedTime t = new ElapsedTime();
-        t.reset();
-        while (t.seconds() < secs && opModeIsActive()){
-            leftFront.setPower(powerLeft);
-            leftBack.setPower(powerLeft);
-            rightFront.setPower(powerRight);
-            rightBack.setPower(powerRight);
-        }
-        leftFront.setPower(0);
-        leftBack.setPower(0);
-        rightFront.setPower(0);
-        rightBack.setPower(0);
-    }
-
-    public void strafe(double power, double secs) {
-        ElapsedTime t = new ElapsedTime();
-        t.reset();
-        while(t.seconds() < secs && opModeIsActive()) {
-            leftFront.setPower(power);
-            leftBack.setPower(power*-1);
-            rightFront.setPower(power*-1);
-            rightBack.setPower(power);
-        }
-        leftFront.setPower(0);
-        leftBack.setPower(0);
-        rightFront.setPower(0);
-        rightBack.setPower(0);
-    }
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
@@ -131,57 +100,98 @@ public class FoundationBlueBuilding extends LinearOpMode {
         leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.FORWARD);
-        rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightBack.setDirection(DcMotor.Direction.FORWARD);
+
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
 
-        Boolean autoEnd = false;
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive() && !autoEnd) {
+        while (opModeIsActive()) {
 
+            if(gamepad1.right_trigger>0.3) {
+                joyScale = 0.025;
+            }
+            else {
+                joyScale = 0.2;
+            }
             // Setup a variable for each drive wheel to save power level for telemetry
-            double leftFPower = leftFront.getPower();
-            double rightFPower = rightFront.getPower();
-            double leftBPower = leftBack.getPower();
-            double rightBPower = rightBack.getPower();
 
-            strafe(0.5,2.6);
+            // Reset speed variables
+            LF = 0; RF = 0; LR = 0; RR = 0;
 
-            straight(0.5,0.5);
+            // Get joystick values
+                Y1 = -gamepad1.right_stick_y * joyScale; // invert so up is positive
+                X1 = gamepad1.right_stick_x * joyScale;
+                Y2 = -gamepad1.left_stick_y * joyScale; // Y2 is not used at present
+                X2 = gamepad1.left_stick_x * joyScale;
 
-            straight(-0.2,0.125);
 
-            foundGrabber.setPosition(0.7);
+            // Forward/back movement
+            LF += Y1; RF += Y1; LR += Y1; RR += Y1;
 
-            wait(0.5);
+            // Side to side movement
+            LF += X1; RF -= X1; LR -= X1; RR += X1;
 
-            straight(-0.5,0.3);
+            // Rotation movement
+            LF += X2; RF -= X2; LR += X2; RR -= X2;
 
-            turn(-0.5,0.5,1.8);
+            // Clip motor power values to +-motorMax
+            LF = Math.max(-motorMax, Math.min(LF, motorMax));
+            RF = Math.max(-motorMax, Math.min(RF, motorMax));
+            LR = Math.max(-motorMax, Math.min(LR, motorMax));
+            RR = Math.max(-motorMax, Math.min(RR, motorMax));
 
-            straight(0.5,1.5);
+            // Send values to the motors
 
-            foundGrabber.setPosition(-0.7);
+            leftFront.setPower(LF);
+            rightFront.setPower(RF);
+            leftBack.setPower(LR);
+            rightBack.setPower(RR);
 
-            strafe(-0.5,1);
 
-            straight(0.5,0.4);
 
-            strafe(0.5, 1.8);
+            // Break System
 
-            straight(-0.2, 0.7);
+            // I we are moving reset timer
+            if((LF!=0||RF!=0||LR!=0||RR!=0)) {
+                timeDriveZero.reset();
+            }
 
-            strafe(-0.5, 2.3);
+            // After an amount of time we switch the motors to break rather than strafe
+            if(timeDriveZero.seconds()>0.1) {
+                leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            }
+            else {
+                leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            }
 
-            autoEnd = true;
+
+            if((gamepad1.b||gamepad2.b)&&timerFound.seconds()>0.3) {
+                foundGrabber.setPosition(0.45+foundEncoder);
+                foundEncoder*=-1;
+                timerFound.reset();
+            }
+
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Motors", "left Front (%.2f), left Back (%.2f), right Front (%.2f), right Back (%.2f)", leftFPower, leftBPower, rightFPower, rightBPower);
+            telemetry.addData("Power Scaling: ", "(%.1f)", joyScale);
+            telemetry.addData("Encoder Foundation", foundEncoder);
+            //telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
             telemetry.update();
         }
     }
 }
-//snack bot

@@ -27,13 +27,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.NewCompOpModes;
+package org.firstinspires.ftc.teamcode.UltGoalCompOpModes;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 
 /**
@@ -49,9 +58,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="RightSide Park - Bridge", group="Linear Opmode")
+@Autonomous(name="Ultimate Goal Auto Test", group="Linear Opmode")
 //@Disabled
-public class NewRightBridge extends LinearOpMode {
+public class UltimateGoalTestAuto extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -59,6 +68,13 @@ public class NewRightBridge extends LinearOpMode {
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
+    private Servo foundGrabber = null;
+
+    BNO055IMU imu;
+
+    // State used for updating telemetry
+    Orientation angles;
+    Acceleration gravity;
 
     public void wait(double secs) {
         ElapsedTime t = new ElapsedTime();
@@ -110,10 +126,93 @@ public class NewRightBridge extends LinearOpMode {
         rightFront.setPower(0);
         rightBack.setPower(0);
     }
+
+    public double getAngle() {
+        angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        return AngleUnit.DEGREES.normalize(AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle));
+    }
+
+    public void turnTo(double degrees, double powerLeft, double powerRight) {
+        if(getAngle()<degrees) {
+            while(getAngle()<degrees) {
+                leftFront.setPower(powerLeft);
+                leftBack.setPower(powerLeft);
+                rightFront.setPower(powerRight);
+                rightBack.setPower(powerRight);
+                telemetry.addData("Angle Value", getAngle());
+                telemetry.update();
+            }
+            leftFront.setPower(0);
+            leftBack.setPower(0);
+            rightFront.setPower(0);
+            rightBack.setPower(0);
+        }
+        else {
+            while(getAngle()>degrees) {
+                leftFront.setPower(powerLeft);
+                leftBack.setPower(powerLeft);
+                rightFront.setPower(powerRight);
+                rightBack.setPower(powerRight);
+                telemetry.addData("Angle Value", getAngle());
+                telemetry.update();
+            }
+            leftFront.setPower(0);
+            leftBack.setPower(0);
+            rightFront.setPower(0);
+            rightBack.setPower(0);
+        }
+    }
+
+    public void turnBy(double degrees, double powerLeft, double powerRight) {
+        if(powerLeft<powerRight) {
+            double targetX = getAngle()+degrees;
+            while(getAngle()<targetX) {
+                leftFront.setPower(powerLeft);
+                leftBack.setPower(powerLeft);
+                rightFront.setPower(powerRight);
+                rightBack.setPower(powerRight);
+                telemetry.addData("Angle Value", getAngle());
+                telemetry.update();
+            }
+            leftFront.setPower(0);
+            leftBack.setPower(0);
+            rightFront.setPower(0);
+            rightBack.setPower(0);
+        }
+        else {
+            double targetX = getAngle()-degrees;
+            while(getAngle()>targetX) {
+                leftFront.setPower(powerLeft);
+                leftBack.setPower(powerLeft);
+                rightFront.setPower(powerRight);
+                rightBack.setPower(powerRight);
+                telemetry.addData("X Value", getAngle());
+                telemetry.update();
+            }
+            leftFront.setPower(0);
+            leftBack.setPower(0);
+            rightFront.setPower(0);
+            rightBack.setPower(0);
+        }
+    }
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled      = true;
+        parameters.loggingTag          = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+        // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
+        // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
+        // and named "imu".
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
@@ -122,6 +221,7 @@ public class NewRightBridge extends LinearOpMode {
         leftBack  = hardwareMap.get(DcMotor.class, "bl_motor");
         rightFront = hardwareMap.get(DcMotor.class, "fr_motor");
         rightBack = hardwareMap.get(DcMotor.class, "br_motor");
+        foundGrabber = hardwareMap.get(Servo.class, "found_servo");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -144,11 +244,18 @@ public class NewRightBridge extends LinearOpMode {
             double leftBPower = leftBack.getPower();
             double rightBPower = rightBack.getPower();
 
-            straight(0.3,1.0);
+            straight(0.2,1.5);
 
-            strafe(-0.5,2.2);
+            turn(0.2,-0.2, 0.3);
 
-            straight(0.3,0.3);
+            straight(0.2,3);
+
+            straight(-0.2,0.5);
+
+            strafe(-0.3, 2);
+
+            //Goes forward slightly too much
+            straight(0.2,1);
 
             autoEnd = true;
 

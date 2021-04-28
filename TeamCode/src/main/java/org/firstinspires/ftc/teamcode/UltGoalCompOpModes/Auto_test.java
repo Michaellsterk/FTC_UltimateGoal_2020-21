@@ -27,13 +27,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.CompOpModes;
+package org.firstinspires.ftc.teamcode.UltGoalCompOpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 
 /**
@@ -49,16 +51,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="RedLoadingZone", group="Linear Opmode")
+@Autonomous(name="Basic: Auto Linear OpMode", group="Linear Opmode")
 //@Disabled
-public class RedLoading extends LinearOpMode {
+public class Auto_test extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftFront = null;
-    private DcMotor rightFront = null;
-    private DcMotor leftBack = null;
-    private DcMotor rightBack = null;
+    private DcMotor leftDrive = null;
+    private DcMotor rightDrive = null;
 
     public void wait(double secs) {
         ElapsedTime t = new ElapsedTime();
@@ -70,45 +70,22 @@ public class RedLoading extends LinearOpMode {
         ElapsedTime t = new ElapsedTime();
         t.reset();
         while (t.seconds() < secs && opModeIsActive()){
-            leftFront.setPower(power);
-            leftBack.setPower(power);
-            rightFront.setPower(power);
-            rightBack.setPower(power);
+            leftDrive.setPower(power);
+            rightDrive.setPower(power);
         }
-        leftFront.setPower(0);
-        leftBack.setPower(0);
-        rightFront.setPower(0);
-        rightBack.setPower(0);
+        leftDrive.setPower(0);
+        rightDrive.setPower(0);
     }
 
     public void turn(double powerLeft, double powerRight, double secs) {
         ElapsedTime t = new ElapsedTime();
         t.reset();
         while (t.seconds() < secs && opModeIsActive()){
-            leftFront.setPower(powerLeft);
-            leftBack.setPower(powerLeft);
-            rightFront.setPower(powerRight);
-            rightBack.setPower(powerRight);
+            leftDrive.setPower(powerLeft);
+            rightDrive.setPower(powerRight);
         }
-        leftFront.setPower(0);
-        leftBack.setPower(0);
-        rightFront.setPower(0);
-        rightBack.setPower(0);
-    }
-
-    public void strafe(double power, double secs) {
-        ElapsedTime t = new ElapsedTime();
-        t.reset();
-        while(t.seconds() < secs && opModeIsActive()) {
-            leftFront.setPower(power);
-            leftBack.setPower(power*-1);
-            rightFront.setPower(power*-1);
-            rightBack.setPower(power);
-        }
-        leftFront.setPower(0);
-        leftBack.setPower(0);
-        rightFront.setPower(0);
-        rightBack.setPower(0);
+        leftDrive.setPower(0);
+        rightDrive.setPower(0);
     }
     @Override
     public void runOpMode() {
@@ -118,17 +95,13 @@ public class RedLoading extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftFront  = hardwareMap.get(DcMotor.class, "fl_motor");
-        leftBack  = hardwareMap.get(DcMotor.class, "bl_motor");
-        rightFront = hardwareMap.get(DcMotor.class, "fr_motor");
-        rightBack = hardwareMap.get(DcMotor.class, "br_motor");
+        leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
+        rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        leftBack.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setDirection(DcMotor.Direction.FORWARD);
-        rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -139,24 +112,18 @@ public class RedLoading extends LinearOpMode {
         while (opModeIsActive() && !autoEnd) {
 
             // Setup a variable for each drive wheel to save power level for telemetry
-            double leftFPower = leftFront.getPower();
-            double rightFPower = rightFront.getPower();
-            double leftBPower = leftBack.getPower();
-            double rightBPower = rightBack.getPower();
+            double leftPower = leftDrive.getPower();
+            double rightPower = rightDrive.getPower();
 
-            straight(0.2, 0.3);
+            straight(0.5, 3);
 
-            turn(0.5,-0.5,0.6);
-
-            straight(0.2,1.5);
-
-            strafe(0.2,2);
+            turn(0.25,0,0.5);
 
             autoEnd = true;
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Motors", "left Front (%.2f), left Back (%.2f), right Front (%.2f), right Back (%.2f)", leftFPower, leftBPower, rightFPower, rightBPower);
+            telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
             telemetry.update();
         }
     }
