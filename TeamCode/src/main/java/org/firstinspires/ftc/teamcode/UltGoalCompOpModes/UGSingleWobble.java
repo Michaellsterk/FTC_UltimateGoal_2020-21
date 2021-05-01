@@ -58,9 +58,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Ultimate Goal Auto Test", group="Linear Opmode")
+@Autonomous(name="Ultimate Goal Single Wobble", group="Linear Opmode")
 //@Disabled
-public class UltimateGoalTestAuto extends LinearOpMode {
+public class UGSingleWobble extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -254,8 +254,7 @@ public class UltimateGoalTestAuto extends LinearOpMode {
 
             strafe(-0.3, 2);
 
-            //Goes forward slightly too much
-            straight(0.2,1);
+            straight(0.2,0.8);
 
             autoEnd = true;
 
