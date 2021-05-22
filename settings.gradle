@@ -1,3 +1,2 @@
-rootProject.name='FTC_UltimateGoal_2020-21'
 include ':FtcRobotController'
 include ':TeamCode'
