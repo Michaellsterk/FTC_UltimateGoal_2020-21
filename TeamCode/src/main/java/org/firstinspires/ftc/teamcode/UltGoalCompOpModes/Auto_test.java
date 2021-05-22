@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode.UltGoalCompOpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -50,9 +51,8 @@ import com.qualcomm.robotcore.util.Range;
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-
 @Autonomous(name="Basic: Auto Linear OpMode", group="Linear Opmode")
-//@Disabled
+@Disabled
 public class Auto_test extends LinearOpMode {
 
     // Declare OpMode members.
@@ -87,6 +87,7 @@ public class Auto_test extends LinearOpMode {
         leftDrive.setPower(0);
         rightDrive.setPower(0);
     }
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
