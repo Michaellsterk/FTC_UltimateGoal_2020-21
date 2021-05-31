@@ -64,9 +64,9 @@ import java.util.List;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="TEST Auto Tensor Flow", group="Linear Opmode")
+@Autonomous(name="COMP Auto Tensor Flow", group="Linear Opmode")
 //@Disabled
-public class UGAutoTensorFlow extends LinearOpMode {
+public class UGAutoTensorFlowV2 extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -357,7 +357,7 @@ public class UGAutoTensorFlow extends LinearOpMode {
             double leftBPower = leftBack.getPower();
             double rightBPower = rightBack.getPower();
 
-            wait(1.0);
+            strafe(-0.3,1.2);
 
             telemetry.addData("Rings:", ringCount);
 
@@ -374,13 +374,13 @@ public class UGAutoTensorFlow extends LinearOpMode {
             telemetry.addData("Rings:", ringCount);
             telemetry.update();
 
-            wait(2.0);
-
             tfod.shutdown();
 
             if(ringCount == 0) {
                 //Close Score Zone
-                straight(0.2,1);
+                strafe(0.3,1.2);
+                turn(0.425,0.3,2.0);
+              
             }
             else if (ringCount == 1) {
                 //Mid Score Zone
