@@ -306,6 +306,7 @@ public class UGAutoTensorFlowV2 extends LinearOpMode {
             // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
             // should be set to the value of the images used to create the TensorFlow Object Detection model
             // (typically 16/9).
+            tfod.setClippingMargins(200,350,200,0);
             tfod.setZoom(1.75, 16.0/9.0);
 
         }
@@ -382,13 +383,16 @@ public class UGAutoTensorFlowV2 extends LinearOpMode {
                 turn(0.425,0.3,2.0);
               
             }
-            else if (ringCount == 1) {
+            /** else if (ringCount == 1) {
                 //Mid Score Zone
-                strafe(-0.3, 2);
-            }
+                strafe(0.3,1.2);
+                turn(0.3,0.4,2.8);
+            } **/
             else {
                 //Far Score Zone
-                strafe(0.3,2);
+                strafe(0.3,1.2);
+                turn(0.375,0.3,3.75);
+                straight(-0.3,1.2);
             }
 
             autoEnd = true;
