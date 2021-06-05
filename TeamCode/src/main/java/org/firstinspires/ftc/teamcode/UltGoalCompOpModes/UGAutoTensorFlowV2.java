@@ -360,15 +360,19 @@ public class UGAutoTensorFlowV2 extends LinearOpMode {
 
             strafe(-0.3,1.2);
 
+            foundGrabber.setPosition(0.65);
+
+            wait(1.0);
+
             telemetry.addData("Rings:", ringCount);
 
-            for( int i = 0; i<10; i++) {
+            for( int i = 0; i<20; i++) {
                 wait(0.1);
                 ringCount += getRings();
                 telemetry.addData("Rings:", ringCount);
                 telemetry.update();
             }
-            ringCount /= 10;
+            ringCount /= 20;
             ringCount += 0.5;
             ringCount = (int)ringCount;
 
@@ -377,10 +381,12 @@ public class UGAutoTensorFlowV2 extends LinearOpMode {
 
             tfod.shutdown();
 
+            foundGrabber.setPosition(0.25);
+
             if(ringCount == 0) {
                 //Close Score Zone
                 strafe(0.3,1.2);
-                turn(0.425,0.3,2.0);
+                turn(0.35,0.25,2.25);
               
             }
             /** else if (ringCount == 1) {
@@ -391,8 +397,9 @@ public class UGAutoTensorFlowV2 extends LinearOpMode {
             else {
                 //Far Score Zone
                 strafe(0.3,1.2);
-                turn(0.375,0.3,3.75);
-                straight(-0.3,1.2);
+                turn(0.35,0.3,3.75);
+                straight(-0.25,1.5);
+
             }
 
             autoEnd = true;
